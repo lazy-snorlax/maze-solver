@@ -7,42 +7,49 @@ def is_valid(maze, row, col):
     return (row >= 0) and (row < maze._num_rows) and (col >= 0) and (col < maze._num_cols)
 
 # Determine if cell has wall
-def is_unblocked(maze, from_cell, to_cell):
-    # print(f"Checking if Cell {from_cell} has walls ----------------")
-    # print(f"Does Cell {from_cell} have a bottom wall? {maze._cells[from_cell[0]][from_cell[1]].has_bottom_wall} ")
-    # print(f"Does Cell {from_cell} have a top wall? {maze._cells[from_cell[0]][from_cell[1]].has_top_wall} ")
-    # print(f"Does Cell {from_cell} have a left wall? {maze._cells[from_cell[0]][from_cell[1]].has_left_wall} ")
-    # print(f"Does Cell {from_cell} have a right wall? {maze._cells[from_cell[0]][from_cell[1]].has_right_wall} ")
+def is_unblocked(maze, i, j):
+    print(f"Checking if Cell ({i},{j}) has walls ----------------")
+    print(f"Does Cell ({i},{j}) have a bottom wall? {maze._cells[i][j].has_bottom_wall} ")
+    print(f"Does Cell ({i},{j}) have a top wall? {maze._cells[i][j].has_top_wall} ")
+    print(f"Does Cell ({i},{j}) have a left wall? {maze._cells[i][j].has_left_wall} ")
+    print(f"Does Cell ({i},{j}) have a right wall? {maze._cells[i][j].has_right_wall} ")
     
     # print(f"Checking if Cell {to_cell} has walls ----------------")
     # print(f"Does Cell {to_cell} have a bottom wall? {maze._cells[to_cell[0]][to_cell[1]].has_bottom_wall} ")
     # print(f"Does Cell {to_cell} have a top wall? {maze._cells[to_cell[0]][to_cell[1]].has_top_wall} ")
     # print(f"Does Cell {to_cell} have a left wall? {maze._cells[to_cell[0]][to_cell[1]].has_left_wall} ")
     # print(f"Does Cell {to_cell} have a right wall? {maze._cells[to_cell[0]][to_cell[1]].has_right_wall} ")
-  
+
+    maze._cells[i][j].visited = True
+    # move left
     if (
-        to_cell[1] < maze._num_rows - 1
-        and not maze._cells[to_cell[0]][to_cell[1]].has_top_wall
-        and not maze._cells[from_cell[0]][from_cell[1]].has_bottom_wall
+        i > 0
+        and not maze._cells[i][j].has_left_wall
+        and not maze._cells[i - 1][j].visited
     ):
         return True
+
+    # move right
     if (
-        to_cell[1] > 0
-        and not maze._cells[to_cell[0]][to_cell[1]].has_bottom_wall
-        and not maze._cells[from_cell[0]][from_cell[1]].has_top_wall
-        and from_cell != (0, 0) #Check if start node
+        i < maze._num_cols - 1
+        and not maze._cells[i][j].has_right_wall
+        and not maze._cells[i + 1][j].visited
     ):
         return True
+    
+    # move up
     if (
-        to_cell[0] > 0
-        and not maze._cells[to_cell[0]][to_cell[1]].has_right_wall
-        and not maze._cells[from_cell[0]][from_cell[1]].has_left_wall 
+        j > 0
+        and not maze._cells[i][j].has_top_wall
+        and not maze._cells[i][j - 1].visited
     ):
         return True
+    
+    # move down
     if (
-        to_cell[0] < maze._num_cols -1
-        and not maze._cells[to_cell[0]][to_cell[1]].has_left_wall
-        and not maze._cells[from_cell[0]][from_cell[1]].has_right_wall 
+        j < maze._num_rows - 1
+        and not maze._cells[i][j].has_top_wall
+        and not maze._cells[i][j + 1].visited
     ):
         return True
     return False
@@ -54,6 +61,30 @@ def is_destination(maze, i, j):
 
 def calculate_h(maze, row, col):
     return ((row - maze._num_rows) ** 2 + (col - maze._num_cols) ** 2) ** 0.5
+
+def trace_path(cell_details, maze):
+    print("The Path is ")
+    path = []
+    row = maze._num_rows -1
+    col = maze._num_cols -1
+
+    # Trace the path from destination to source using parent cells
+    while not (cell_details[row][col].parent_i == row and cell_details[row][col].parent_j == col):
+        path.append((row, col))
+        temp_row = cell_details[row][col].parent_i
+        temp_col = cell_details[row][col].parent_j
+        row = temp_row
+        col = temp_col
+
+    # Add the source cell to the path
+    path.append((row, col))
+    # Reverse the path to get the path from source to destination
+    path.reverse()
+
+    # Print the path
+    for i in path:
+        print("->", i, end=" ")
+    print()
 
 def astar(maze):
     i = 0
@@ -81,21 +112,21 @@ def astar(maze):
         i = p[0]
         j = p[1]
 
-        print(f"Cell {i}, {j}")
         closed_list[i][j] = True
         # print(f"Closed_List: {closed_list}")
-
         # Check each direction, check the successors
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dir in directions:
             new_i = i + dir[0]
             new_j = j + dir[1]
 
+            # print(f"Cell ({new_i}, {new_j}) {is_valid(maze, new_i, new_j)} {is_unblocked(maze, (i, j), (new_i, new_j))} {not closed_list[new_i][new_j]}")
+            
             # print(f"Current Cell: {new_i}, {new_j}")
             # If the successor is valid, unblocked and not visited
-            if is_valid(maze, new_i, new_j) and is_unblocked(maze, (i, j), (new_i, new_j)) and not closed_list[new_i][new_j]:
+            if is_valid(maze, new_i, new_j) and is_unblocked(maze, new_i, new_j) and not closed_list[new_i][new_j]:
                 # print(f"Current Cell: {new_i}, {new_j}")
-                maze._cells[new_i][new_j].draw_move(maze._cells[i][j])
+                # maze._cells[new_i][new_j].draw_move(maze._cells[i][j])
                 # if successor is destination
                 if is_destination(maze, new_i, new_j):
                     # set the parent of the destination cell
@@ -103,6 +134,7 @@ def astar(maze):
                     cell_details[new_i][new_j].parent_j = j
                     print("Found Destination")
                     # trace and print the path from source to destination
+                    trace_path(cell_details, maze)
                     found_dest = True
                     return found_dest
                 else:
