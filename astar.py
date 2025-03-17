@@ -1,33 +1,28 @@
 from maze import Maze
 from cell import Cell
-from queue import PriorityQueue
 
 # Determine if cell has is part of maze
 def is_valid(maze, row, col):
     return (row >= 0) and (row < maze._num_rows) and (col >= 0) and (col < maze._num_cols)
 
 # Determine if cell has wall
-def is_unblocked(maze, i, j):
+def neighbour_nodes(maze, i, j):
     print(f"Checking if Cell ({i},{j}) has walls ----------------")
     print(f"Does Cell ({i},{j}) have a bottom wall? {maze._cells[i][j].has_bottom_wall} ")
     print(f"Does Cell ({i},{j}) have a top wall? {maze._cells[i][j].has_top_wall} ")
     print(f"Does Cell ({i},{j}) have a left wall? {maze._cells[i][j].has_left_wall} ")
     print(f"Does Cell ({i},{j}) have a right wall? {maze._cells[i][j].has_right_wall} ")
-    
-    # print(f"Checking if Cell {to_cell} has walls ----------------")
-    # print(f"Does Cell {to_cell} have a bottom wall? {maze._cells[to_cell[0]][to_cell[1]].has_bottom_wall} ")
-    # print(f"Does Cell {to_cell} have a top wall? {maze._cells[to_cell[0]][to_cell[1]].has_top_wall} ")
-    # print(f"Does Cell {to_cell} have a left wall? {maze._cells[to_cell[0]][to_cell[1]].has_left_wall} ")
-    # print(f"Does Cell {to_cell} have a right wall? {maze._cells[to_cell[0]][to_cell[1]].has_right_wall} ")
 
+    nodes = []
     maze._cells[i][j].visited = True
+
     # move left
     if (
         i > 0
         and not maze._cells[i][j].has_left_wall
         and not maze._cells[i - 1][j].visited
     ):
-        return True
+        nodes.append((i - 1, j))
 
     # move right
     if (
@@ -35,7 +30,7 @@ def is_unblocked(maze, i, j):
         and not maze._cells[i][j].has_right_wall
         and not maze._cells[i + 1][j].visited
     ):
-        return True
+        nodes.append((i + 1, j))
     
     # move up
     if (
@@ -43,16 +38,16 @@ def is_unblocked(maze, i, j):
         and not maze._cells[i][j].has_top_wall
         and not maze._cells[i][j - 1].visited
     ):
-        return True
+        nodes.append((i, j - 1))
     
     # move down
     if (
         j < maze._num_rows - 1
-        and not maze._cells[i][j].has_top_wall
+        and not maze._cells[i][j].has_bottom_wall
         and not maze._cells[i][j + 1].visited
     ):
-        return True
-    return False
+        nodes.append((i, j + 1))
+    return nodes
 
 def is_destination(maze, i, j):
     if (maze._num_rows-1 == i and maze._num_cols-1 == j):
@@ -80,6 +75,14 @@ def trace_path(cell_details, maze):
     path.append((row, col))
     # Reverse the path to get the path from source to destination
     path.reverse()
+
+    i = 0
+    while i < len(path):
+        if (i == 0):
+            maze._cells[path[i][0]][path[i][1]].draw_move(maze._cells[path[i][0]][path[i][1]])
+        else:
+            maze._cells[path[i-1][0]][path[i-1][1]].draw_move(maze._cells[path[i][0]][path[i][1]])
+        i += 1
 
     # Print the path
     for i in path:
@@ -113,26 +116,23 @@ def astar(maze):
         j = p[1]
 
         closed_list[i][j] = True
-        # print(f"Closed_List: {closed_list}")
         # Check each direction, check the successors
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        directions = neighbour_nodes(maze, i, j)
+        print(f"Neighbours {directions}")
         for dir in directions:
-            new_i = i + dir[0]
-            new_j = j + dir[1]
-
-            # print(f"Cell ({new_i}, {new_j}) {is_valid(maze, new_i, new_j)} {is_unblocked(maze, (i, j), (new_i, new_j))} {not closed_list[new_i][new_j]}")
+            new_i = dir[0]
+            new_j = dir[1]
             
-            # print(f"Current Cell: {new_i}, {new_j}")
+            print(f"Current Cell: {new_i}, {new_j}")
             # If the successor is valid, unblocked and not visited
-            if is_valid(maze, new_i, new_j) and is_unblocked(maze, new_i, new_j) and not closed_list[new_i][new_j]:
-                # print(f"Current Cell: {new_i}, {new_j}")
-                # maze._cells[new_i][new_j].draw_move(maze._cells[i][j])
+            if is_valid(maze, new_i, new_j) and not closed_list[new_i][new_j]:
                 # if successor is destination
                 if is_destination(maze, new_i, new_j):
                     # set the parent of the destination cell
                     cell_details[new_i][new_j].parent_i = i
                     cell_details[new_i][new_j].parent_j = j
                     print("Found Destination")
+                    
                     # trace and print the path from source to destination
                     trace_path(cell_details, maze)
                     found_dest = True
