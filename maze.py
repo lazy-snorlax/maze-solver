@@ -116,6 +116,7 @@ class Maze:
             for cell in col:
                 cell.visited = False
     
+    # Depth-First Search
     def solve_r(self, i, j):
         self.animate()
 

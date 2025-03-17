@@ -11,6 +11,11 @@ class Cell:
         self._x2 = None
         self._y1 = None
         self._y2 = None
+        self.f = float('inf')
+        self.g = 0
+        self.h = 0
+        self.parent_i = 0
+        self.parent_j = 0
         self._win = win
     
     def draw(self, x1, y1, x2, y2):

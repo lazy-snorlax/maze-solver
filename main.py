@@ -1,11 +1,12 @@
 from graphics import Window, Line, Point
 from maze import Maze
+from astar import astar
 import sys
 
 
 def main():
-    num_rows = 20
-    num_cols = 20
+    num_rows = 5
+    num_cols = 5
     margin = 50
     screen_x = 1000
     screen_y = 800
@@ -17,7 +18,12 @@ def main():
 
     maze = Maze(margin, margin, num_rows, num_cols, cell_size_x, cell_size_y, win, 10)
     print("maze created")
-    is_solvable = maze.solve()
+    
+    # Depth-First Search
+    # is_solvable = maze.solve()
+
+    is_solvable = astar(maze)
+    
     if not is_solvable:
         print("maze can not be solved!")
     else:
