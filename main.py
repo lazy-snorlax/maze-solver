@@ -22,6 +22,7 @@ def main():
     # Depth-First Search
     # is_solvable = maze.solve()
 
+    # A* Search
     is_solvable = astar(maze)
     
     if not is_solvable:
